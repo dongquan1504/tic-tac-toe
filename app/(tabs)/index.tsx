@@ -60,6 +60,10 @@ export default function HomeScreen() {
         playSound();
         return <GameScreen />;
       }
+      case 'playComputer': {
+        playSound();
+        return <GameScreen isBot />;
+      }
       default: {
         stopSound();
 
@@ -71,8 +75,12 @@ export default function HomeScreen() {
               {/* <HelloWave /> */}
             </ThemedView>
             <Button
-              title="Play Game"
+              title="Play With Friend"
               onPress={() => setCurrentView('playGame')}
+            />
+            <Button
+              title="Play With Computer"
+              onPress={() => setCurrentView('playComputer')}
             />
             <Button
               title="Rules"
