@@ -1,6 +1,7 @@
 import { Image, StyleSheet, TouchableOpacity, Button, View } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Audio } from 'expo-av';
 
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,6 +10,37 @@ import GameScreen from '@/components/game';
 
 export default function HomeScreen() {
   const [currentView, setCurrentView] = useState('home');
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  useEffect(() => {
+    const loadSound = async () => {
+      const { sound } = await Audio.Sound.createAsync(
+        require('@/assets/sounds/background-sound.mp3'),
+        { isLooping: true }
+      );
+      soundRef.current = sound;
+    };
+
+    loadSound();
+
+    // Make sure to unload the sound when the component unmounts
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  const playSound = async () => {
+    if (soundRef.current) {
+      await soundRef.current.replayAsync(); // Use replayAsync to play from the beginning
+    }
+  };
+  const stopSound = async () => {
+    if (soundRef.current) {
+      await soundRef.current.stopAsync(); // Use replayAsync to play from the beginning
+    }
+  };
 
   const renderContent = () => {
     switch (currentView) {
@@ -24,9 +56,13 @@ export default function HomeScreen() {
           <ThemedText>
             <ThemedText type="defaultSemiBold">Note</ThemedText>: When three pieces have been placed on the board, the fourth piece will replace the first one, meaning the first piece will disappear to make room for the fourth.
           </ThemedText></>;
-      case 'playGame':
+      case 'playGame': {
+        playSound();
         return <GameScreen />;
-      default:
+      }
+      default: {
+        stopSound();
+
         // The default view is 'home'
         return (
           <>
@@ -44,8 +80,10 @@ export default function HomeScreen() {
             />
           </>
         );
+      }
     }
   };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#737373' }}

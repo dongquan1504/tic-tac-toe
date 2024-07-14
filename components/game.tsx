@@ -1,6 +1,6 @@
-import { Image, StyleSheet, TouchableOpacity, Button, View, Text } from 'react-native';
-import React, { useState } from 'react';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { StyleSheet, TouchableOpacity, Button } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Audio } from 'expo-av';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -30,11 +30,38 @@ function Square({ value, isDisable, onSquareClick }: SquareProps) {
 
 function Board({ xIsNext, squares, currentMove, onPlay, onPlayAgain }: BoardProps) {
   const [indexDeleteSquare, setIndexDeleteSquare] = useState<(number)[]>([]);
+  // Using useRef to hold the sound object
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  useEffect(() => {
+    const loadSound = async () => {
+      const { sound } = await Audio.Sound.createAsync(
+        require('@/assets/sounds/click-sound.mp3')
+      );
+      soundRef.current = sound;
+    };
+
+    loadSound();
+
+    // Make sure to unload the sound when the component unmounts
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  const playSound = async () => {
+    if (soundRef.current) {
+      await soundRef.current.replayAsync(); // Use replayAsync to play from the beginning
+    }
+  };
 
   function handleClick(i: any) {
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
+    playSound();
     const nextSquares = squares.slice();
     if (xIsNext) {
       nextSquares[i] = 'X';
